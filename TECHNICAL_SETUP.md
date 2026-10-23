@@ -41,10 +41,23 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
 `runs.jsonl` (one JSON object per run: result, HTTP status, timings, errors), `last.png` (last screenshot),
 `snapshots/` (raw API reply at init and at every change).
 
+## Why there is a certificate in the repo
+
+`sectigo-ov-r36.pem` is a public certificate, not a secret: it holds no key and grants no access. Every HTTPS
+server must send its own certificate plus the intermediate certificate that links it to a trusted root. AIMA's
+API server does not send the intermediate. Browsers fetch it themselves, so the page works there, but Python
+refuses the connection with `CERTIFICATE_VERIFY_FAILED`. The script loads this one file on top of the system's
+trusted roots to complete the chain. It is Sectigo's "Public Server Authentication CA OV R36", valid until
+2036-03-21. Nothing else in the system trusts it, and only `aima_watch.py` uses it.
+
 ## Requirements
 
 - Linux with Python 3.8 or newer and `python3-venv`. Runs on a Raspberry Pi with Debian 13 (arm64) and Python 3.13.
 - Outbound HTTPS to `api-contactenos.aima.gov.pt`, `contactenos.aima.gov.pt` and `api.telegram.org`.
+- A machine that can reach AIMA. On 2026-10-23 AIMA did not accept connections from a server in Brazil, while
+  machines in Portugal worked; it may block other countries or networks too. Check before installing:
+  `curl -k -s -o /dev/null -m 20 -w '%{http_code}\n' https://api-contactenos.aima.gov.pt/` must print a
+  number such as `404`. `000` means this machine cannot reach AIMA, and the watcher will not work there.
 - For the screenshot only: Playwright's headless Chromium, about 275 MB in `~/.cache/ms-playwright` with
   `--only-shell`. Without `--only-shell` Playwright also downloads the full browser, about 680 MB in total.
 - `--with-deps` runs `sudo apt-get install` for the browser's system libraries. apt may also upgrade packages
@@ -87,7 +100,10 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
    - From a message link: in Telegram Desktop or Web, right-click a message in the group and copy its link. A
      private group link looks like `https://t.me/c/<number>/<topic>/<message>` (or `/c/<number>/<message>`
      without topics). The chat id is `-100<number>`, and `<topic>` is the `TELEGRAM_THREAD_ID`.
-   - Leave `TELEGRAM_THREAD_ID` empty to post in the main chat.
+   - Topics: in a group with topics, copy the link of a message inside the topic you want. Example:
+     `https://t.me/c/1234567890/55/987` gives `TELEGRAM_CHAT_ID=-1001234567890` and `TELEGRAM_THREAD_ID=55`.
+     A link with only two numbers comes from a group without topics or from the General topic: leave
+     `TELEGRAM_THREAD_ID` empty, and messages go to the main chat (General).
    - Check the chat id with `https://api.telegram.org/bot<TOKEN>/getChat?chat_id=<chat id>`: `"ok": true` means
      the bot is in the chat. The topic id cannot be checked this way; a wrong one shows up as `HTTP Error 400`
      at step 6.
@@ -153,7 +169,8 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
 | Symptom | Cause and fix |
 |---|---|
 | `fetch failed: ... CERTIFICATE_VERIFY_FAILED` | `sectigo-ov-r36.pem` missing, or AIMA changed certificate authority. Check the chain with `openssl s_client -connect api-contactenos.aima.gov.pt:443 -showcerts` and replace the file with the intermediate it names |
-| `fetch failed: TimeoutError` | the AIMA API is sometimes slow (up to 25 s seen, about 1 run in 30 timed out). Nothing to fix: the next run checks again |
+| `fetch failed: ... timed out` on every run | this machine cannot reach AIMA (seen from a server in Brazil). Run the `curl` check in Requirements; if it prints `000`, use a machine in Portugal or on another network |
+| `fetch failed: TimeoutError` now and then | the AIMA API is sometimes slow (up to 25 s seen, about 1 run in 30 timed out). Nothing to fix: the next run checks again |
 | `fetch failed: HTTP Error 404` or `KeyError` | wrong tracking id, or AIMA changed the API. Open the tracking page in a browser and compare with the network request it makes |
 | `error: AIMA_TRACKING_ID is not set` | no `.env` next to `aima_watch.py`, or the line is missing. The script reads `.env` from its own folder; variables already set in the environment win |
 | `KeyError: 'TELEGRAM_BOT_TOKEN'` | the variable is missing in `.env` |
