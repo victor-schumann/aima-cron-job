@@ -161,11 +161,11 @@ def run():
     latest = max(data["historico"], key=lambda h: h["dataCriacao"])
     RUN.update(current=latest["tipo"], steps=len(steps))
     if "--test" in sys.argv:
-        done = set(steps)
-        nxt = next((c for c in data["caminhoEsperado"] if c["tipo"] not in done), latest)
-        fake = {"labelPt": nxt["labelPt"], "dataCriacao": latest["dataCriacao"]}
+        # Real current and previous step, so the text matches the screenshot.
+        hist = sorted(data["historico"], key=lambda h: h["dataCriacao"])
+        prev = hist[-2]["tipo"] if len(hist) > 1 else latest["tipo"]
         shot = screenshot()
-        ok = send(message(data, latest["tipo"], fake, test=True), shot)
+        ok = send(message(data, prev, latest, test=True), shot)
         RUN.update(result="test", screenshot=bool(shot), telegram=ok)
         log(f"test message sent: {ok}")
         return 0

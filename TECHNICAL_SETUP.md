@@ -22,8 +22,8 @@ token and chat id into `.env` themselves; never print the token or paste it into
    updates `state.json` only when Telegram accepts the message, so a failed send is retried at the next run.
 5. The first run ever only saves the current steps to `state.json` and sends nothing.
 
-`--test` sends a message titled "TESTE - ATUALIZACAO AIMA" that shows the next expected step as if it had
-happened. It does not touch `state.json`.
+`--test` sends a message titled "TESTE - ATUALIZACAO AIMA" with the real current and previous step, the same
+ones the screenshot shows. It does not touch `state.json`.
 
 If the screenshot fails (no browser, page changed), the message is sent as text only and the error is logged.
 
@@ -69,8 +69,9 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
    venv/bin/playwright install --with-deps --only-shell chromium
    ```
 
-   (`--with-deps` uses sudo apt; see Requirements), or, where Playwright has no build (some ARM boards), use the system package (`sudo apt install chromium`) and
-   set `CHROMIUM_PATH=/usr/bin/chromium` in `.env`. Skipping both is fine: messages go out as text.
+   `--with-deps` uses sudo apt; see Requirements. Where Playwright has no build (some ARM boards), use the system
+   package instead (`sudo apt install chromium`) and set `CHROMIUM_PATH=/usr/bin/chromium` in `.env`. Skipping
+   both is fine: messages go out as text.
 
 3. Find your tracking id. It is the UUID at the end of your AIMA tracking link,
    `https://contactenos.aima.gov.pt/tracking/<id>`. `AIMA_TRACKING_ID` also accepts the full link.
@@ -80,14 +81,16 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
    - Add the bot to the group (or open a private chat with it). In a group, a new bot runs in privacy mode and only
      sees commands and mentions, so send `/start@<bot_username>` there rather than a plain message.
    - Open `https://api.telegram.org/bot<TOKEN>/getUpdates` and read `message.chat.id` (groups have a negative
-     id, often starting with `-100`). If the list is empty, look for `my_chat_member.chat.id`, which Telegram
-     sends when the bot is added, or use the next point.
+     id, often starting with `-100`). The list is often empty: updates are kept for 24 hours only, and a webhook
+     or another program polling the same bot empties it. Then look for `my_chat_member.chat.id` (sent when the
+     bot is added), or use the next point, which always works.
    - From a message link: in Telegram Desktop or Web, right-click a message in the group and copy its link. A
      private group link looks like `https://t.me/c/<number>/<topic>/<message>` (or `/c/<number>/<message>`
      without topics). The chat id is `-100<number>`, and `<topic>` is the `TELEGRAM_THREAD_ID`.
    - Leave `TELEGRAM_THREAD_ID` empty to post in the main chat.
-   - Check both with `https://api.telegram.org/bot<TOKEN>/getChat?chat_id=<chat id>`: `"ok": true` means the bot
-     is in the chat.
+   - Check the chat id with `https://api.telegram.org/bot<TOKEN>/getChat?chat_id=<chat id>`: `"ok": true` means
+     the bot is in the chat. The topic id cannot be checked this way; a wrong one shows up as `HTTP Error 400`
+     at step 6.
 
 5. Create `.env` and keep it private:
 
@@ -122,14 +125,15 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
    systemd (recommended, it catches up on runs missed while the machine was off):
 
    ```bash
-   sed "s/YOUR_USER/$USER/g" systemd/aima-watch.service | sudo tee /etc/systemd/system/aima-watch.service
+   sed -e "s/YOUR_USER/$USER/g" -e "s#/home/$USER/aima-cron-job#$PWD#g" systemd/aima-watch.service \
+     | sudo tee /etc/systemd/system/aima-watch.service
    sudo cp systemd/aima-watch.timer /etc/systemd/system/
    sudo systemctl daemon-reload
    sudo systemctl enable --now aima-watch.timer
    systemctl list-timers aima-watch.timer
    ```
 
-   The service assumes the repo is at `/home/<user>/aima-cron-job`; edit the paths if it is elsewhere. Run it
+   Run the `sed` from the repo folder: the second expression puts the real repo path in the unit. Run it
    once by hand with `sudo systemctl start aima-watch.service` and read `journalctl -u aima-watch.service -n 5`.
 
    cron:
@@ -139,6 +143,8 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
    # add:
    0 8,14,16,20 * * * cd ~/aima-cron-job && set -a && . ./.env && venv/bin/python aima_watch.py
    ```
+
+   Replace `~/aima-cron-job` if the repo is elsewhere.
 
    Times follow the system timezone (`timedatectl`). Change them in the timer's `OnCalendar` line or in the cron
    line. Keep it to a few runs a day: it is a public government service.

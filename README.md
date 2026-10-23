@@ -22,9 +22,10 @@ Raspberry Pi.
 2. Create a Telegram bot with @BotFather, add it to your chat, and copy `.env.example` to `.env`
    (`chmod 600 .env`). Fill in your tracking id (the last part of your AIMA tracking link), the bot token and
    the chat id. TECHNICAL_SETUP.md explains how to find the chat id.
-3. Test it: `set -a; . ./.env; set +a; venv/bin/python aima_watch.py --test` sends a "TESTE" message.
+3. Test it: `set -a; . ./.env; set +a; venv/bin/python aima_watch.py --test` sends a "TESTE" message with
+   the current status.
 4. Run it once without `--test` to save the current status, then schedule it with the units in
-   `systemd/` (replace `YOUR_USER`; the paths assume the repo is in `~/aima-cron-job`) or with cron:
+   `systemd/` (see TECHNICAL_SETUP.md step 8) or with cron (replace `~/aima-cron-job` if the repo is elsewhere):
 
    ```
    0 8,14,16,20 * * * cd ~/aima-cron-job && set -a && . ./.env && venv/bin/python aima_watch.py
