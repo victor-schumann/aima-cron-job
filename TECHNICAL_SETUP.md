@@ -3,6 +3,10 @@
 This file is written so a person or an AI assistant can set the watcher up end to end without guessing. Follow
 the steps in order and run each check before moving on.
 
+If you are an AI assistant setting this up for someone: ask the user before each step that changes their system
+(`sudo apt` through `--with-deps`, systemd units, cron lines) and say what it changes. Let the user type the
+token and chat id into `.env` themselves; never print the token or paste it into logs, chats or commits.
+
 ## What it does
 
 `aima_watch.py` runs once and exits. A timer (systemd or cron) starts it a few times a day. Each run:
@@ -41,6 +45,12 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
 
 - Linux with Python 3.8 or newer and `python3-venv`. Runs on a Raspberry Pi with Debian 13 (arm64) and Python 3.13.
 - Outbound HTTPS to `api-contactenos.aima.gov.pt`, `contactenos.aima.gov.pt` and `api.telegram.org`.
+- For the screenshot only: Playwright's headless Chromium, about 275 MB in `~/.cache/ms-playwright` with
+  `--only-shell`. Without `--only-shell` Playwright also downloads the full browser, about 680 MB in total.
+- `--with-deps` runs `sudo apt-get install` for the browser's system libraries. apt may also upgrade packages
+  that are already installed (on a Debian 13 desktop it upgraded 24 and added 6 on 2026-10-23). Skip it on a
+  machine where that is not acceptable and install the libraries yourself, or use the system Chromium (step 2).
+- The paths in `systemd/aima-watch.service` and in the cron line assume the repo is at `~/aima-cron-job`.
 
 ## Steps
 
@@ -56,10 +66,10 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
 2. Install a browser for the screenshot. Either let Playwright download one:
 
    ```bash
-   venv/bin/playwright install --with-deps chromium
+   venv/bin/playwright install --with-deps --only-shell chromium
    ```
 
-   or, where Playwright has no build (some ARM boards), use the system package (`sudo apt install chromium`) and
+   (`--with-deps` uses sudo apt; see Requirements), or, where Playwright has no build (some ARM boards), use the system package (`sudo apt install chromium`) and
    set `CHROMIUM_PATH=/usr/bin/chromium` in `.env`. Skipping both is fine: messages go out as text.
 
 3. Find your tracking id. It is the UUID at the end of your AIMA tracking link,
@@ -67,18 +77,24 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
 
 4. Create the Telegram bot and find the chat id:
    - In Telegram, talk to @BotFather, send `/newbot`, and copy the token.
-   - Add the bot to the group (or open a private chat with it) and send any message there.
+   - Add the bot to the group (or open a private chat with it). In a group, a new bot runs in privacy mode and only
+     sees commands and mentions, so send `/start@<bot_username>` there rather than a plain message.
    - Open `https://api.telegram.org/bot<TOKEN>/getUpdates` and read `message.chat.id` (groups have a negative
-     id, often starting with `-100`).
-   - For a group with topics, `message.message_thread_id` of a message sent inside the topic is the
-     `TELEGRAM_THREAD_ID`. Leave it empty to post in the main chat.
+     id, often starting with `-100`). If the list is empty, look for `my_chat_member.chat.id`, which Telegram
+     sends when the bot is added, or use the next point.
+   - From a message link: in Telegram Desktop or Web, right-click a message in the group and copy its link. A
+     private group link looks like `https://t.me/c/<number>/<topic>/<message>` (or `/c/<number>/<message>`
+     without topics). The chat id is `-100<number>`, and `<topic>` is the `TELEGRAM_THREAD_ID`.
+   - Leave `TELEGRAM_THREAD_ID` empty to post in the main chat.
+   - Check both with `https://api.telegram.org/bot<TOKEN>/getChat?chat_id=<chat id>`: `"ok": true` means the bot
+     is in the chat.
 
 5. Create `.env` and keep it private:
 
    ```bash
    cp .env.example .env
    chmod 600 .env
-   nano .env
+   nano .env   # or any editor
    ```
 
 6. Check and send a test message:
