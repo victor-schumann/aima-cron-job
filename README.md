@@ -4,8 +4,6 @@ Watches your AIMA residence card request (the `contactenos.aima.gov.pt/tracking/
 message with a screenshot when the status changes. It runs a few times a day on any Linux box, for example a
 Raspberry Pi.
 
-![Telegram message sent when the status changed](docs/telegram-message.png)
-
 ## Setup
 
 You need a Linux machine that is always on (a Raspberry Pi is enough), a Telegram account, and your AIMA tracking
