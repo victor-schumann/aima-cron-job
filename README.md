@@ -8,8 +8,8 @@ Raspberry Pi.
 
 ## Setup
 
-You need a Linux machine that is always on (a Raspberry Pi is enough), a Telegram account, and your AIMA tracking
-link.
+You need a Linux machine (like a Raspberry Pi) that is on at the times you schedule, a Telegram account, and
+your AIMA tracking link.
 
 1. Download and install. This takes a few minutes and asks for your sudo password once:
 
@@ -36,8 +36,9 @@ link.
    nano .env
    ```
 
-   Set `AIMA_TRACKING_ID` to your AIMA tracking link, and paste the bot token and the chat id. Save with Ctrl+O,
-   Enter, then exit with Ctrl+X.
+   Set `AIMA_TRACKING_ID` to your full AIMA tracking link, as you got it, for example
+   `AIMA_TRACKING_ID=https://contactenos.aima.gov.pt/tracking/1a2b3c4d-...`. Then paste the bot token and the
+   chat id. Save with Ctrl+O, Enter, then exit with Ctrl+X.
 
 5. Send a test message. You should get a message titled "TESTE" with your current status:
 
@@ -51,7 +52,7 @@ link.
    venv/bin/python aima_watch.py
    ```
 
-7. Make it run by itself at 08:00, 14:00, 16:00 and 20:00. Run `crontab -e`, add this line at the end, and save:
+7. Make it run by itself, for example at 08:00, 14:00, 16:00 and 20:00. Run `crontab -e`, add this line at the end, and save:
 
    ```
    0 8,14,16,20 * * * ~/aima-cron-job/venv/bin/python ~/aima-cron-job/aima_watch.py
@@ -59,5 +60,4 @@ link.
 
 Done. When AIMA changes your status, the bot sends a message like the one above.
 
-Topics in a group, systemd instead of cron, and troubleshooting: [TECHNICAL_SETUP.md](TECHNICAL_SETUP.md). If you use an AI assistant to set it
-up, point it to that file.
+Topics in a group, systemd instead of cron, and troubleshooting: [TECHNICAL_SETUP.md](TECHNICAL_SETUP.md).
