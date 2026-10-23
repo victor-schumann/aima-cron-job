@@ -1,0 +1,12 @@
+[Unit]
+Description=Check the AIMA residence card status and post changes to Telegram
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=YOUR_USER
+WorkingDirectory=/tmp
+EnvironmentFile=/home/YOUR_USER/aima-cron-job/.env
+Environment=AIMA_TRIGGER=timer
+ExecStart=/home/YOUR_USER/aima-cron-job/venv/bin/python -I /home/YOUR_USER/aima-cron-job/aima_watch.py

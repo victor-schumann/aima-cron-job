@@ -1,0 +1,9 @@
+[Unit]
+Description=Check AIMA status daily at 08:00, 14:00, 16:00 and 20:00 (system timezone)
+
+[Timer]
+OnCalendar=*-*-* 08,14,16,20:00:00
+Persistent=true
+
+[Install]
+WantedBy=timers.target
