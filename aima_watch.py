@@ -83,8 +83,8 @@ def ctt_line(data):
     code = find_key(data, "registoSaida")
     if not code:
         return None
-    url = f"https://appserver.ctt.pt/CustomerArea/PublicArea_Detail?ObjectCodeInput={code}&SearchInput={code}"
-    return f"CTT: <a href=\"{html.escape(url)}\">{html.escape(str(code))}</a>"
+    code = html.escape(str(code))
+    return f"CTT: {code}\nCTT link: https://www.ctt.pt/feapl_2/app/open/objectSearch/objectSearch.jspx?objects={code}"
 
 
 def message(data, before_tipo, new_step, test=False):
@@ -99,7 +99,7 @@ def message(data, before_tipo, new_step, test=False):
         f"Antes: <i>{html.escape(before)}</i>",
         "",
         *([ctt] if (ctt := ctt_line(data)) else []),
-        f"Link: {PAGE}",
+        f"AIMA link: {PAGE}",
     ])
 
 
