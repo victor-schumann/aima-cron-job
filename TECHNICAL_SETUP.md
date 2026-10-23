@@ -103,7 +103,6 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
 6. Check and send a test message:
 
    ```bash
-   set -a; . ./.env; set +a
    venv/bin/python aima_watch.py --test
    tail -1 runs.jsonl
    ```
@@ -141,7 +140,7 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
    ```bash
    crontab -e
    # add:
-   0 8,14,16,20 * * * cd ~/aima-cron-job && set -a && . ./.env && venv/bin/python aima_watch.py
+   0 8,14,16,20 * * * ~/aima-cron-job/venv/bin/python ~/aima-cron-job/aima_watch.py
    ```
 
    Replace `~/aima-cron-job` if the repo is elsewhere.
@@ -156,8 +155,8 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
 | `fetch failed: ... CERTIFICATE_VERIFY_FAILED` | `sectigo-ov-r36.pem` missing, or AIMA changed certificate authority. Check the chain with `openssl s_client -connect api-contactenos.aima.gov.pt:443 -showcerts` and replace the file with the intermediate it names |
 | `fetch failed: TimeoutError` | the AIMA API is sometimes slow (up to 25 s seen, about 1 run in 30 timed out). Nothing to fix: the next run checks again |
 | `fetch failed: HTTP Error 404` or `KeyError` | wrong tracking id, or AIMA changed the API. Open the tracking page in a browser and compare with the network request it makes |
-| `error: AIMA_TRACKING_ID is not set` | `.env` not loaded. For a manual run, use `set -a; . ./.env; set +a` first |
-| `KeyError: 'TELEGRAM_BOT_TOKEN'` | same: `.env` not loaded or the variable is missing |
+| `error: AIMA_TRACKING_ID is not set` | no `.env` next to `aima_watch.py`, or the line is missing. The script reads `.env` from its own folder; variables already set in the environment win |
+| `KeyError: 'TELEGRAM_BOT_TOKEN'` | the variable is missing in `.env` |
 | `HTTP Error 401` from Telegram | wrong bot token |
 | `HTTP Error 400` from Telegram | wrong chat id or thread id, or the bot is not in the chat |
 | `screenshot failed: ...` | no browser, or the page layout changed (it looks for the text "Estado atual"). The message still goes out as text |

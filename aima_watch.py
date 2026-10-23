@@ -2,6 +2,20 @@
 import datetime, html, json, os, ssl, sys, time, traceback, urllib.parse, urllib.request, uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+
+
+def load_env():
+    """Read KEY=value lines from .env next to the script; variables already set win."""
+    path = os.path.join(HERE, ".env")
+    if not os.path.exists(path):
+        return
+    for line in open(path):
+        key, sep, value = line.strip().partition("=")
+        if sep and key and not key.startswith("#"):
+            os.environ.setdefault(key.strip(), value.strip().strip("\"'"))
+
+
+load_env()
 TRACKING_ID = os.environ.get("AIMA_TRACKING_ID", "").strip().rstrip("/").split("/")[-1]
 API = f"https://api-contactenos.aima.gov.pt/api/FormTracking/{TRACKING_ID}"
 PAGE = f"https://contactenos.aima.gov.pt/tracking/{TRACKING_ID}"
