@@ -154,6 +154,7 @@ Written at run time, all ignored by git: `state.json` (seen steps), `aima.log` (
 | Symptom | Cause and fix |
 |---|---|
 | `fetch failed: ... CERTIFICATE_VERIFY_FAILED` | `sectigo-ov-r36.pem` missing, or AIMA changed certificate authority. Check the chain with `openssl s_client -connect api-contactenos.aima.gov.pt:443 -showcerts` and replace the file with the intermediate it names |
+| `fetch failed: TimeoutError` | the AIMA API is sometimes slow (up to 25 s seen, about 1 run in 30 timed out). Nothing to fix: the next run checks again |
 | `fetch failed: HTTP Error 404` or `KeyError` | wrong tracking id, or AIMA changed the API. Open the tracking page in a browser and compare with the network request it makes |
 | `error: AIMA_TRACKING_ID is not set` | `.env` not loaded. For a manual run, use `set -a; . ./.env; set +a` first |
 | `KeyError: 'TELEGRAM_BOT_TOKEN'` | same: `.env` not loaded or the variable is missing |

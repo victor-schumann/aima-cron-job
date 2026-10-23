@@ -19,9 +19,8 @@ Raspberry Pi.
    ```
 
    `--with-deps` runs `sudo apt` and may upgrade system packages; the browser takes about 275 MB.
-2. Create a Telegram bot with @BotFather, add it to your chat, and copy `.env.example` to `.env`
-   (`chmod 600 .env`). Fill in your tracking id (the last part of your AIMA tracking link), the bot token and
-   the chat id. TECHNICAL_SETUP.md explains how to find the chat id.
+2. Create a Telegram bot with @BotFather, add it to your chat, and copy `.env.example` to `.env`.
+   Fill in your tracking id (the last part of your AIMA tracking link), the bot token and the chat id.
 3. Test it: `set -a; . ./.env; set +a; venv/bin/python aima_watch.py --test` sends a "TESTE" message with
    the current status.
 4. Run it once without `--test` to save the current status, then schedule it with the units in
